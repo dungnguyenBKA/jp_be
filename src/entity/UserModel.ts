@@ -1,6 +1,7 @@
-import {Column, Entity, OneToMany} from "typeorm"
+import {Column, Entity, ManyToMany, OneToMany} from "typeorm"
 import BaseEntity from "./BaseEntity";
 import DocumentEntity from "./DocumentEntity";
+import CommentEntity from "./CommentEntity";
 
 @Entity()
 export class UserModel extends BaseEntity {
@@ -21,10 +22,10 @@ export class UserModel extends BaseEntity {
 
   @OneToMany(() => DocumentEntity, (model) => model.uploader)
   documents: DocumentEntity[]
-  //
-  // @ManyToMany(() => Conversation, (model) => model.users)
-  // conversations: Conversation[]
-  //
-  // @OneToMany(() => ReadMessage, (model) => model.user)
-  // reads: ReadMessage[]
+
+  @ManyToMany(() => DocumentEntity, (model) => model.likedUsers)
+  favouriteDocuments: DocumentEntity[]
+
+  @OneToMany(() => CommentEntity, (model) => model.author)
+  comments: CommentEntity[]
 }

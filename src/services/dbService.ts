@@ -2,6 +2,12 @@ import 'reflect-metadata'
 import {DataSource} from 'typeorm'
 import {UserModel} from "../entity/UserModel";
 import DocumentEntity from "../entity/DocumentEntity";
+import CategoryEntity from "../entity/CategoryEntity";
+import SchoolEntity from "../entity/SchoolEntity";
+import SubjectEntity from "../entity/SubjectEntity";
+import LecturerEntity from "../entity/LecturerEntity";
+import CommentEntity from "../entity/CommentEntity";
+import UserViewDocumentEntity from "../entity/UserViewDocumentEntity";
 
 export const AppDataSource = new DataSource({
   type: process.env.TYPEORM_TYPE as any,
@@ -12,7 +18,16 @@ export const AppDataSource = new DataSource({
   database: process.env.TYPEORM_DATABASE,
   synchronize: Boolean(process.env.TYPEORM_SYNCHRONIZE),
   logging: process.env.TYPEORM_LOGGING as any,
-  entities: [UserModel, DocumentEntity],
+  entities: [
+    UserModel,
+    DocumentEntity,
+    CategoryEntity,
+    SchoolEntity,
+    SubjectEntity,
+    LecturerEntity,
+    CommentEntity,
+    UserViewDocumentEntity,
+  ],
   migrations: [],
   subscribers: []
 })

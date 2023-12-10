@@ -5,14 +5,18 @@ import DocumentEntity from "../entity/DocumentEntity";
 import {UserModel} from "../entity/UserModel";
 import {body, validationResult} from "express-validator";
 import AppUtils, {tryParseInt} from "../utils/AppUtils";
+import UserViewDocumentEntity from "../entity/UserViewDocumentEntity";
 
 const router = Router()
 const documentRepository = AppDataSource.getRepository(DocumentEntity)
 const userRepository = AppDataSource.getRepository(UserModel)
+const userViewDocRepo = AppDataSource.getRepository(UserViewDocumentEntity)
 
 router.get("/detail/:id",
   async (req, res) => {
     const docId = tryParseInt(req.params.id, -1)
+    const user: UserModel = req.body["performer"]
+
     const document = await documentRepository.findOne({
       where: {
         id: docId
@@ -80,37 +84,37 @@ router.post("/verify-document",
   body("id").notEmpty(),
   body("is_verify").isBoolean().notEmpty(),
   async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return makeError(res, 404, AppUtils.getValidateError(errors))
-    }
-
-    const docId = tryParseInt(req.body["id"], -1)
-    const currentUser: UserModel = req.body["performer"]
-
-    if (currentUser.role === "admin") {
-      const document = await documentRepository.findOne({
-        where: {
-          id: docId
-        },
-      })
-
-      if (document) {
-        const result = await documentRepository.save({
-          ...document,
-          is_verified: req.body["is_verify"]
-        })
-        return makeSuccess(res, result)
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return makeError(res, 404, AppUtils.getValidateError(errors))
       }
 
-      return makeError(res, 404, "No document with this id")
-    } else {
-      return makeError(res, 404, "Only admin can verify documents!")
+      const docId = tryParseInt(req.body["id"], -1)
+      const currentUser: UserModel = req.body["performer"]
+
+      if (currentUser.role === "admin") {
+        const document = await documentRepository.findOne({
+          where: {
+            id: docId
+          },
+        })
+
+        if (document) {
+          const result = await documentRepository.save({
+            ...document,
+            is_verified: req.body["is_verify"]
+          })
+          return makeSuccess(res, result)
+        }
+
+        return makeError(res, 404, "No document with this id")
+      } else {
+        return makeError(res, 404, "Only admin can verify documents!")
+      }
+    } catch (e) {
+      return makeError(res, 400, JSON.stringify(e))
     }
-  } catch (e) {
-    return makeError(res, 400, JSON.stringify(e))
-  }
-})
+  })
 
 export default router
