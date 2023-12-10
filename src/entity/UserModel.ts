@@ -1,10 +1,11 @@
-import {Column, Entity} from "typeorm"
+import {Column, Entity, OneToMany} from "typeorm"
 import BaseEntity from "./BaseEntity";
+import DocumentEntity from "./DocumentEntity";
 
 @Entity()
 export class UserModel extends BaseEntity {
   @Column({nullable: false, unique: true})
-  phone_number: string
+  email: string
 
   @Column({nullable: false})
   full_name: string
@@ -15,8 +16,11 @@ export class UserModel extends BaseEntity {
   @Column()
   avatar: string
 
-  // @OneToMany(() => Message, (model) => model.sender)
-  // messages: Message[]
+  @Column({default: "user"})
+  role: "admin" | "user"
+
+  @OneToMany(() => DocumentEntity, (model) => model.uploader)
+  documents: DocumentEntity[]
   //
   // @ManyToMany(() => Conversation, (model) => model.users)
   // conversations: Conversation[]

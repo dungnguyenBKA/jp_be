@@ -9,7 +9,7 @@ const authenticateJWT = async (request: Request, response: Response, next: NextF
     const bearerToken = request.headers["authorization"]?.toString()
     const token = bearerToken?.split(" ")[1]
     if (!token) {
-      return makeError(response, 403, "A token is required for authentication")
+      return makeError(response, 401, "A token is required for authentication")
     }
     const {verify} = jsonwebtoken
     const secret: string = String(process.env.AUTH_SECRET)
@@ -19,13 +19,15 @@ const authenticateJWT = async (request: Request, response: Response, next: NextF
       .findOne({where: {id: decoded["userId"]}})
 
     if (!user) {
-      return makeError(response, 403, "Resource not allowed")
+      return makeError(response, 401, "Resource not allowed")
     }
 
     const _userRes: Partial<UserModel> = user;
     delete _userRes['password']
     // Attach request's identity to Request object
     request.body["performer"] = _userRes
+
+    console.log({_userRes})
   } catch (err) {
     return makeError(response, 401, "Invalid Token")
   }

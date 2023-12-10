@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 import {DataSource} from 'typeorm'
 import {UserModel} from "../entity/UserModel";
+import DocumentEntity from "../entity/DocumentEntity";
 
 export const AppDataSource = new DataSource({
   type: process.env.TYPEORM_TYPE as any,
@@ -11,7 +12,7 @@ export const AppDataSource = new DataSource({
   database: process.env.TYPEORM_DATABASE,
   synchronize: Boolean(process.env.TYPEORM_SYNCHRONIZE),
   logging: process.env.TYPEORM_LOGGING as any,
-  entities: [UserModel,],
+  entities: [UserModel, DocumentEntity],
   migrations: [],
   subscribers: []
 })

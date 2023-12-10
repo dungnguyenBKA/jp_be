@@ -14,7 +14,7 @@ const userRepository: Repository<UserModel> = AppDataSource.getRepository(UserMo
 router.post('/login', async function (request, response) {
   try {
     const user = await userRepository.findOne({
-      where: {phone_number: request.body.phone_number},
+      where: {email: request.body.email},
     })
 
 
@@ -44,17 +44,18 @@ router.post('/login', async function (request, response) {
 })
 
 // Signup
-router.post('/signup', body('phone_number').isMobilePhone('any'), body('password').isLength({min: 8}), async function (request: Request, response: Response,) {
+router.post('/signup', body('email').isEmail(), body('password').isLength({min: 8}), async function (request: Request, response: Response,) {
   // Handle missing fields
   const errors = validationResult(request);
   if (!errors.isEmpty()) {
-    return makeError(response, 400, errors.array().toString())
+    return makeError(response, 400, JSON.stringify(errors.array()[0]))
   }
 
   // Inserting the row into the DB, but hash password first
   utils.hashPassword(request.body.password)
     .then(async hash => {
       request.body.password = hash
+      request.body.role = "user"
       let user: Omit<UserModel, "password"> = await userRepository.save(request.body)
       const access_token = generateJWT(user)
       const _userRes: Partial<UserModel> = user;
@@ -63,7 +64,7 @@ router.post('/signup', body('phone_number').isMobilePhone('any'), body('password
         access_token, user: _userRes,
       }, msgSignupSuccess,);
     }).catch(err => {
-    makeError(response, 500, err.toString())
+    makeError(response, 500, JSON.stringify(err))
   })
 })
 

@@ -6,6 +6,7 @@ import auth from './controllers/authentication'
 import users from './controllers/users'
 import cors from 'cors'
 import authenticateJWT from "./services/authService";
+import document from "./controllers/document";
 
 const app = express()
 
@@ -20,6 +21,7 @@ app.use(urlencoded({extended: false}))
 const router = express.Router()
 router.use('/', auth)
 router.use('/users', authenticateJWT, users)
+router.use('/document', authenticateJWT, document)
 
 // Routes
 app.use("/api", router)
