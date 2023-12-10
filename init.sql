@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: host.docker.internal:3306
--- Generation Time: Dec 10, 2023 at 11:26 AM
+-- Generation Time: Dec 10, 2023 at 11:45 AM
 -- Server version: 8.0.35
 -- PHP Version: 8.2.13
 
@@ -69,7 +69,8 @@ CREATE TABLE `user_model` (
 --
 
 INSERT INTO `user_model` (`id`, `createdAt`, `updatedAt`, `email`, `full_name`, `password`, `avatar`, `role`) VALUES
-(1, '2023-12-10 11:08:58.930672', '2023-12-10 11:21:06.751961', 'dungg.nm@gmail.com', 'Dung Nguyen Minh', '$2a$10$vM1eUsvuusdnbmefD1e7wuy8MIcp/3RLReLSGPC0rGN/Tov4.QORy', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQO7jIuCSwjKtT8HcuxYlET-uBRpexLEJfqyCx8fnxtEw&s', 'admin');
+(1, '2023-12-10 11:08:58.930672', '2023-12-10 11:45:06.843171', 'admin@gmail.com', 'Chavis Nguyen', '$2a$10$vM1eUsvuusdnbmefD1e7wuy8MIcp/3RLReLSGPC0rGN/Tov4.QORy', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQO7jIuCSwjKtT8HcuxYlET-uBRpexLEJfqyCx8fnxtEw&s', 'admin'),
+(2, '2023-12-10 11:45:26.969016', '2023-12-10 11:45:26.969016', 'dungg.nm@gmail.com', 'Dung Nguyen Minh', '$2a$10$v.lit3gT/9Q0mIBVSMHR1ukUpCFNKE5FwWf16zIq.VccaOwLTCn3O', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQO7jIuCSwjKtT8HcuxYlET-uBRpexLEJfqyCx8fnxtEw&s', 'user');
 
 --
 -- Indexes for dumped tables
@@ -103,7 +104,7 @@ ALTER TABLE `document_entity`
 -- AUTO_INCREMENT for table `user_model`
 --
 ALTER TABLE `user_model`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables

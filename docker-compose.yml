@@ -4,9 +4,9 @@ services:
     image: mysql:8.0
     volumes:
       - db_data:/var/lib/mysql
-      - ./init.sql:/data/application/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: always
-    command: --init-file /data/application/init.sql
+    command: --init-file /docker-entrypoint-initdb.d/init.sql
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=tele_db
