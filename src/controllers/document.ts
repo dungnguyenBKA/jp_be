@@ -1,33 +1,56 @@
 import {Router} from "express";
-import {makeError, makeSuccess} from "../utils/BaseResponse";
+import {makeError, makeErrorInCatch, makeSuccess} from "../utils/BaseResponse";
 import {AppDataSource} from "../services/dbService";
 import DocumentEntity from "../entity/DocumentEntity";
 import {UserModel} from "../entity/UserModel";
 import {body, validationResult} from "express-validator";
 import AppUtils, {tryParseInt} from "../utils/AppUtils";
 import UserViewDocumentEntity from "../entity/UserViewDocumentEntity";
+import CategoryEntity from "../entity/CategoryEntity";
+import {In} from "typeorm";
+import LecturerEntity from "../entity/LecturerEntity";
+import SubjectEntity from "../entity/SubjectEntity";
 
 const router = Router()
 const documentRepository = AppDataSource.getRepository(DocumentEntity)
+const categoryEntityRepository = AppDataSource.getRepository(CategoryEntity)
+const lecturerEntityRepository = AppDataSource.getRepository(LecturerEntity)
+const subjectEntityRepository = AppDataSource.getRepository(SubjectEntity)
 const userRepository = AppDataSource.getRepository(UserModel)
 const userViewDocRepo = AppDataSource.getRepository(UserViewDocumentEntity)
 
 router.get("/detail/:id",
   async (req, res) => {
-    const docId = tryParseInt(req.params.id, -1)
-    const user: UserModel = req.body["performer"]
+    try {
+      const docId = tryParseInt(req.params.id, -1)
+      const user: UserModel = req.body["performer"]
 
-    const document = await documentRepository.findOne({
-      where: {
-        id: docId
-      },
-    })
+      const document = await documentRepository.findOne({
+        where: {
+          id: docId
+        },
+        relations: {
+          categories: true,
+          lecturer: {
+            school: true
+          },
+          uploader: true,
+          subject: true
+        }
+      })
 
-    if (document) {
-      return makeSuccess(res, document)
+      if (document) {
+        await userViewDocRepo.save({
+          user,
+          document
+        })
+
+        return makeSuccess(res, document)
+      }
+      return makeError(res, 404, "No document with this id")
+    } catch (e) {
+      return makeError(res, 400, JSON.stringify(e))
     }
-
-    return makeError(res, 404, "No document with this id")
   })
 
 router.get("/list/:id", async (req, res) => {
@@ -39,7 +62,13 @@ router.get("/list/:id", async (req, res) => {
         id: userId
       },
       relations: {
-        documents: true,
+        documents: {
+          categories: true,
+          lecturer: {
+            school: true
+          },
+          subject: true
+        },
       },
     })
 
@@ -56,26 +85,76 @@ router.get("/list/:id", async (req, res) => {
 router.post("/create",
   body("title").notEmpty(),
   body("download_url").notEmpty(),
+  body("categories").isArray().notEmpty(),
+  body("lecturer_id").isNumeric(),
+  body("subject_id").isNumeric(),
   async (req, res,) => {
-    const errors = validationResult(req);
-    const user: UserModel = req.body["performer"]
-
-    if (!errors.isEmpty()) {
-      return makeError(res, 404, AppUtils.getValidateError(errors))
-    }
-
     try {
-      const result = await documentRepository.save({
+      const errors = validationResult(req);
+      const user: UserModel = req.body["performer"]
+      const categoryIds: string[] = req.body["categories"]
+      const lecturer_id = req.body["lecturer_id"]
+      const subject_id = req.body["subject_id"]
+
+      if (!errors.isEmpty()) {
+        return makeError(res, 404, AppUtils.getValidateError(errors))
+      }
+
+      const lecturer = await lecturerEntityRepository.findOne({
+        where: {
+          id: lecturer_id
+        }
+      })
+
+      if (!lecturer) {
+        return makeError(res, 400, `No lecturer with id ${lecturer_id}`)
+      }
+
+      const subject = await subjectEntityRepository.findOne({
+        where: {
+          id: subject_id
+        }
+      })
+
+      if (!subject) {
+        return makeError(res, 400, `No subject with id ${subject_id}`)
+      }
+
+      const categoryEntities = await categoryEntityRepository.find({
+        where: {
+          id: In(categoryIds)
+        }
+      })
+
+      const insert = await documentRepository.save({
         title: req.body["title"],
         description: req.body["description"],
         download_url: req.body["download_url"],
         semester: req.body["semester"],
-        uploader: user
+        uploader: user,
+        categories: categoryEntities,
+        lecturer,
+        subject,
       })
+
+      const result = await documentRepository.findOne({
+        where: {
+          id: insert.id
+        },
+        relations: {
+          uploader: true,
+          categories: true,
+          lecturer: {
+            school: true
+          },
+          subject: true
+        }
+      })
+
 
       return makeSuccess(res, result)
     } catch (e) {
-      return makeError(res)
+      return makeErrorInCatch(res, e)
     }
   },
 )

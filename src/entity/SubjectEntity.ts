@@ -1,6 +1,7 @@
 import BaseEntity from "./BaseEntity";
-import {Column, Entity, ManyToOne} from "typeorm";
+import {Column, Entity, ManyToOne, OneToMany} from "typeorm";
 import SchoolEntity from "./SchoolEntity";
+import DocumentEntity from "./DocumentEntity";
 
 @Entity()
 export default class SubjectEntity extends BaseEntity {
@@ -12,4 +13,7 @@ export default class SubjectEntity extends BaseEntity {
 
   @ManyToOne(() => SchoolEntity, model => model.subjects)
   school: SchoolEntity
+
+  @OneToMany(() => DocumentEntity, model => model.lecturer)
+  documents: DocumentEntity[]
 }

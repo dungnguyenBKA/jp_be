@@ -1,8 +1,11 @@
 import BaseEntity from "./BaseEntity";
-import {Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany} from "typeorm";
+import {Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany} from "typeorm";
 import {UserModel} from "./UserModel";
 import CommentEntity from "./CommentEntity";
 import CategoryEntity from "./CategoryEntity";
+import UserViewDocumentEntity from "./UserViewDocumentEntity";
+import LecturerEntity from "./LecturerEntity";
+import SubjectEntity from "./SubjectEntity";
 
 @Entity()
 export default class DocumentEntity extends BaseEntity {
@@ -32,8 +35,19 @@ export default class DocumentEntity extends BaseEntity {
   comments: CommentEntity[]
 
   @ManyToMany(() => UserModel, model => model.favouriteDocuments)
+  @JoinTable()
   likedUsers: UserModel[]
 
   @ManyToMany(() => CategoryEntity, model => model.documents)
+  @JoinTable()
   categories: CategoryEntity[]
+
+  @OneToMany(() => UserViewDocumentEntity, model => model.document)
+  userViewDocuments: UserViewDocumentEntity[];
+
+  @ManyToOne(() => LecturerEntity, model => model.documents)
+  lecturer: LecturerEntity
+
+  @ManyToOne(() => SubjectEntity, model => model.documents)
+  subject: SubjectEntity
 }

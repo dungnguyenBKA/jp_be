@@ -1,4 +1,5 @@
 import {Response} from "express";
+import {QueryFailedError} from "typeorm";
 
 interface BaseResponse<T> {
   status_code: number,
@@ -21,7 +22,29 @@ function makeError(res: Response, errorCode = 400, message = "Error occurred") {
   })
 }
 
+export const isQueryFailedError = (err: unknown): err is QueryFailedError =>
+  err instanceof QueryFailedError;
+
+function makeErrorInCatch(res: Response, e: unknown) {
+  console.error(e)
+
+  if (isQueryFailedError(e)) {
+    console.error(e)
+    res.status(400).send({
+      status_code: 400,
+      message: e?.message
+    })
+    return
+  }
+
+  res.status(400).send({
+    status_code: 400,
+    message: JSON.stringify(e,null, 2)
+  })
+}
+
 export {
   makeSuccess,
   makeError,
+  makeErrorInCatch
 }

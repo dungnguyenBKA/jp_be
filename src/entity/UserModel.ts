@@ -2,6 +2,7 @@ import {Column, Entity, ManyToMany, OneToMany} from "typeorm"
 import BaseEntity from "./BaseEntity";
 import DocumentEntity from "./DocumentEntity";
 import CommentEntity from "./CommentEntity";
+import UserViewDocumentEntity from "./UserViewDocumentEntity";
 
 @Entity()
 export class UserModel extends BaseEntity {
@@ -28,4 +29,7 @@ export class UserModel extends BaseEntity {
 
   @OneToMany(() => CommentEntity, (model) => model.author)
   comments: CommentEntity[]
+
+  @OneToMany(() => UserViewDocumentEntity, (model) => model.user)
+  userViewDocuments: UserViewDocumentEntity[]
 }
