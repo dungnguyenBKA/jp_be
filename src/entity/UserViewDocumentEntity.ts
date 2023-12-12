@@ -1,5 +1,5 @@
 import BaseEntity from "./BaseEntity";
-import {Entity, ManyToOne} from "typeorm";
+import {Column, Entity, ManyToOne} from "typeorm";
 import DocumentEntity from "./DocumentEntity";
 import {UserModel} from "./UserModel";
 
@@ -10,4 +10,7 @@ export default class UserViewDocumentEntity extends BaseEntity {
 
   @ManyToOne(() => UserModel, model => model.userViewDocuments)
   public user: UserModel
+
+  @Column({ type: 'timestamp' })
+  public view_at: Date
 }

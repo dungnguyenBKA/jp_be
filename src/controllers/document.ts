@@ -10,6 +10,7 @@ import CategoryEntity from "../entity/CategoryEntity";
 import {In, Like} from "typeorm";
 import LecturerEntity from "../entity/LecturerEntity";
 import SubjectEntity from "../entity/SubjectEntity";
+import {take} from "lodash"
 
 const router = Router()
 const documentRepository = AppDataSource.getRepository(DocumentEntity)
@@ -24,6 +25,7 @@ router.get("/detail/:id",
     try {
       const docId = tryParseInt(req.params.id, -1)
       const user: UserModel = req.body["performer"]
+      const now = new Date()
 
       const document = await documentRepository.findOne({
         where: {
@@ -40,10 +42,33 @@ router.get("/detail/:id",
       })
 
       if (document) {
-        await userViewDocRepo.save({
-          user,
-          document
+        const userViewDocResult = await userViewDocRepo.findOne({
+          where: {
+            user: {
+              id: user.id
+            },
+            document: {
+              id: docId
+            }
+          }
         })
+
+        if (userViewDocResult) {
+          // update
+          await userViewDocRepo.save({
+            id: userViewDocResult.id,
+            user,
+            document,
+            view_at: now
+          })
+        } else {
+          // create
+          await userViewDocRepo.save({
+            user,
+            document,
+            view_at: now
+          })
+        }
 
         return makeSuccess(res, document)
       }
@@ -77,6 +102,31 @@ router.get("/list/all", async (req, res) => {
 
     const pagingData = result.slice(startIndex, startIndex + perPage)
     return makeSuccess(res, pagingData)
+  } catch (e) {
+    return makeError(res, 400, JSON.stringify(e))
+  }
+})
+
+router.get("/list/recent-view", async (req, res) => {
+  try {
+    const user: UserModel = req.body["performer"]
+
+    const result = await userViewDocRepo.find({
+      where: {
+        user: {
+          id: user.id
+        }
+      },
+      relations: {
+        document: true,
+      },
+      order: {
+        view_at: "DESC"
+      },
+      take: 5
+    })
+
+    return makeSuccess(res, result)
   } catch (e) {
     return makeError(res, 400, JSON.stringify(e))
   }
