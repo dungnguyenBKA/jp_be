@@ -7,7 +7,7 @@ import {body, validationResult} from "express-validator";
 import AppUtils, {tryParseInt} from "../utils/AppUtils";
 import UserViewDocumentEntity from "../entity/UserViewDocumentEntity";
 import CategoryEntity from "../entity/CategoryEntity";
-import {In} from "typeorm";
+import {In, Like} from "typeorm";
 import LecturerEntity from "../entity/LecturerEntity";
 import SubjectEntity from "../entity/SubjectEntity";
 
@@ -52,6 +52,36 @@ router.get("/detail/:id",
       return makeError(res, 400, JSON.stringify(e))
     }
   })
+
+router.get("/list/all", async (req, res) => {
+  try {
+    const query = req.query
+    const qName = req.query['name']?.toString() || ""
+
+    const page = tryParseInt(req.query["page"], 0) || 0
+    const perPage = tryParseInt(req.query["per_page"], 5) || 5
+    const startIndex = page * perPage
+
+    const result = await documentRepository.find({
+      where: {
+        title: Like(`%${qName}%`)
+      },
+      relations: {
+        categories: true,
+        lecturer: {
+          school: true
+        },
+        subject: true
+      },
+    })
+
+    console.log(result)
+    const pagingData = result.slice(startIndex, startIndex + perPage)
+    return makeSuccess(res, pagingData)
+  } catch (e) {
+    return makeError(res, 400, JSON.stringify(e))
+  }
+})
 
 router.get("/list/:id", async (req, res) => {
   try {
