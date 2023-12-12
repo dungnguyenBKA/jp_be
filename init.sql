@@ -84,7 +84,7 @@ CREATE TABLE `document_entity` (
 --
 
 INSERT INTO `document_entity` (`id`, `createdAt`, `updatedAt`, `title`, `description`, `download_url`, `download_count`, `semester`, `is_verified`, `uploader_id`, `lecturerId`, `subjectId`) VALUES
-(12, '2023-12-11 13:08:55.966056', '2023-12-11 13:08:55.966056', 'Hello kitty', NULL, 'https://github.com/dungnguyenBKA/template-react-js', 0, '', 0, 1, 1, 1);
+(12, '2023-12-11 13:08:55.966056', '2023-12-11 13:08:55.966056', 'Hello kitty', NULL, 'https://cdn.filestackcontent.com/wcrjf9qPTCKXV3hMXDwK', 0, '', 0, 1, 1, 1);
 
 -- --------------------------------------------------------
 
