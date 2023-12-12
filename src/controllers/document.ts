@@ -75,7 +75,6 @@ router.get("/list/all", async (req, res) => {
       },
     })
 
-    console.log(result)
     const pagingData = result.slice(startIndex, startIndex + perPage)
     return makeSuccess(res, pagingData)
   } catch (e) {
