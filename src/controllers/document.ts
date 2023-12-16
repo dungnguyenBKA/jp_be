@@ -7,10 +7,39 @@ import {body, validationResult} from "express-validator";
 import AppUtils, {tryParseInt} from "../utils/AppUtils";
 import UserViewDocumentEntity from "../entity/UserViewDocumentEntity";
 import CategoryEntity from "../entity/CategoryEntity";
-import {In, Like} from "typeorm";
+import {DeepPartial, In, Like} from "typeorm";
 import LecturerEntity from "../entity/LecturerEntity";
 import SubjectEntity from "../entity/SubjectEntity";
-import {take} from "lodash"
+import multer from 'multer'
+import path from "path";
+import FileEntity from "../entity/FileEntity";
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null,'uploads');
+  },
+  filename: function (req, file, cb) {
+    const extname = path.extname(file.originalname).toLowerCase()
+    const name = `${Date.now()}${extname}`
+    cb(null, name);
+  }
+})
+
+const upload = multer({
+  storage,
+  fileFilter(req, file, callback) {
+    const filetypes = /pdf|docx/;
+    // Check ext
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    // Check mime
+    const mimetype = filetypes.test(file.mimetype);
+    if(mimetype && extname){
+      return callback(null, true);
+    }
+
+    callback(null, true)
+  },
+})
 
 const router = Router()
 const documentRepository = AppDataSource.getRepository(DocumentEntity)
@@ -19,6 +48,7 @@ const lecturerEntityRepository = AppDataSource.getRepository(LecturerEntity)
 const subjectEntityRepository = AppDataSource.getRepository(SubjectEntity)
 const userRepository = AppDataSource.getRepository(UserModel)
 const userViewDocRepo = AppDataSource.getRepository(UserViewDocumentEntity)
+const fileEntityRepository = AppDataSource.getRepository(FileEntity)
 
 router.get("/detail/:id",
   async (req, res) => {
@@ -37,7 +67,8 @@ router.get("/detail/:id",
             school: true
           },
           uploader: true,
-          subject: true
+          subject: true,
+          files: true
         }
       })
 
@@ -96,7 +127,8 @@ router.get("/list/all", async (req, res) => {
         lecturer: {
           school: true
         },
-        subject: true
+        subject: true,
+        files: true
       },
     })
 
@@ -146,7 +178,8 @@ router.get("/list/:id", async (req, res) => {
           lecturer: {
             school: true
           },
-          subject: true
+          subject: true,
+          files: true,
         },
       },
     })
@@ -162,21 +195,29 @@ router.get("/list/:id", async (req, res) => {
 })
 
 router.post("/create",
+  upload.array('files'),
   body("title").notEmpty(),
-  body("download_url").notEmpty(),
-  body("categories").isArray().notEmpty(),
+  body("categories").notEmpty(),
   body("lecturer_id").isNumeric(),
   body("subject_id").isNumeric(),
   async (req, res,) => {
     try {
       const errors = validationResult(req);
       const user: UserModel = req.body["performer"]
-      const categoryIds: string[] = req.body["categories"]
-      const lecturer_id = req.body["lecturer_id"]
-      const subject_id = req.body["subject_id"]
+      const categoryIds: string[] = (req.body["categories"] as string).split(",")
+      const lecturer_id = tryParseInt(req.body["lecturer_id"], -1)
+      const subject_id = tryParseInt(req.body["subject_id"], -1)
 
       if (!errors.isEmpty()) {
         return makeError(res, 404, AppUtils.getValidateError(errors))
+      }
+
+      console.log(req.body)
+      console.log(req.files)
+
+      const files = (req.files || []) as Express.Multer.File[]
+      if (files.length === 0) {
+        return makeError(res, 404, "Files pdf AND/OR docx is required")
       }
 
       const lecturer = await lecturerEntityRepository.findOne({
@@ -205,10 +246,9 @@ router.post("/create",
         }
       })
 
-      const insert = await documentRepository.save({
+      const insertDoc = await documentRepository.save({
         title: req.body["title"],
         description: req.body["description"],
-        download_url: req.body["download_url"],
         semester: req.body["semester"],
         uploader: user,
         categories: categoryEntities,
@@ -216,9 +256,18 @@ router.post("/create",
         subject,
       })
 
+      await fileEntityRepository.save(
+        files.map(item => {
+          return {
+            url: item.filename,
+            document: insertDoc
+          } as DeepPartial<FileEntity>
+        })
+      )
+
       const result = await documentRepository.findOne({
         where: {
-          id: insert.id
+          id: insertDoc.id
         },
         relations: {
           uploader: true,
@@ -226,10 +275,10 @@ router.post("/create",
           lecturer: {
             school: true
           },
-          subject: true
+          subject: true,
+          files: true
         }
       })
-
 
       return makeSuccess(res, result)
     } catch (e) {

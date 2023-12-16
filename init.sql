@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: host.docker.internal:3306
--- Generation Time: Dec 11, 2023 at 01:10 PM
+-- Generation Time: Dec 16, 2023 at 08:34 PM
 -- Server version: 8.0.35
 -- PHP Version: 8.2.13
 
@@ -70,7 +70,6 @@ CREATE TABLE `document_entity` (
   `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `title` varchar(255) NOT NULL,
   `description` varchar(255) DEFAULT NULL,
-  `download_url` varchar(255) NOT NULL,
   `download_count` int NOT NULL DEFAULT '0',
   `semester` varchar(255) NOT NULL DEFAULT '',
   `is_verified` tinyint NOT NULL DEFAULT '0',
@@ -78,13 +77,6 @@ CREATE TABLE `document_entity` (
   `lecturerId` int DEFAULT NULL,
   `subjectId` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `document_entity`
---
-
-INSERT INTO `document_entity` (`id`, `createdAt`, `updatedAt`, `title`, `description`, `download_url`, `download_count`, `semester`, `is_verified`, `uploader_id`, `lecturerId`, `subjectId`) VALUES
-(12, '2023-12-11 13:08:55.966056', '2023-12-11 13:08:55.966056', 'Hello kitty', NULL, 'https://cdn.filestackcontent.com/wcrjf9qPTCKXV3hMXDwK', 0, '', 0, 1, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -97,14 +89,6 @@ CREATE TABLE `document_entity_categories_category_entity` (
   `categoryEntityId` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Dumping data for table `document_entity_categories_category_entity`
---
-
-INSERT INTO `document_entity_categories_category_entity` (`documentEntityId`, `categoryEntityId`) VALUES
-(12, 1),
-(12, 4);
-
 -- --------------------------------------------------------
 
 --
@@ -114,6 +98,20 @@ INSERT INTO `document_entity_categories_category_entity` (`documentEntityId`, `c
 CREATE TABLE `document_entity_liked_users_user_model` (
   `documentEntityId` int NOT NULL,
   `userModelId` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `file_entity`
+--
+
+CREATE TABLE `file_entity` (
+  `id` int NOT NULL,
+  `createdAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `url` varchar(255) NOT NULL,
+  `documentId` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -219,15 +217,9 @@ CREATE TABLE `user_view_document_entity` (
   `createdAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `documentId` int DEFAULT NULL,
-  `userId` int DEFAULT NULL
+  `userId` int DEFAULT NULL,
+  `view_at` timestamp NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `user_view_document_entity`
---
-
-INSERT INTO `user_view_document_entity` (`id`, `createdAt`, `updatedAt`, `documentId`, `userId`) VALUES
-(3, '2023-12-11 13:09:40.651688', '2023-12-11 13:09:40.651688', 12, 1);
 
 --
 -- Indexes for dumped tables
@@ -272,6 +264,14 @@ ALTER TABLE `document_entity_liked_users_user_model`
   ADD PRIMARY KEY (`documentEntityId`,`userModelId`),
   ADD KEY `IDX_ee85783b9dc2eccb1da083a708` (`documentEntityId`),
   ADD KEY `IDX_ba263cb4783e27aafbeb8e3424` (`userModelId`);
+
+--
+-- Indexes for table `file_entity`
+--
+ALTER TABLE `file_entity`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `IDX_e6916cdf804b3af3ba2ef2d3f0` (`url`),
+  ADD KEY `FK_0302d71c7fb712a2681105f92fe` (`documentId`);
 
 --
 -- Indexes for table `lecturer_entity`
@@ -336,6 +336,12 @@ ALTER TABLE `document_entity`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
+-- AUTO_INCREMENT for table `file_entity`
+--
+ALTER TABLE `file_entity`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `lecturer_entity`
 --
 ALTER TABLE `lecturer_entity`
@@ -397,6 +403,12 @@ ALTER TABLE `document_entity_categories_category_entity`
 ALTER TABLE `document_entity_liked_users_user_model`
   ADD CONSTRAINT `FK_ba263cb4783e27aafbeb8e3424b` FOREIGN KEY (`userModelId`) REFERENCES `user_model` (`id`),
   ADD CONSTRAINT `FK_ee85783b9dc2eccb1da083a7086` FOREIGN KEY (`documentEntityId`) REFERENCES `document_entity` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `file_entity`
+--
+ALTER TABLE `file_entity`
+  ADD CONSTRAINT `FK_0302d71c7fb712a2681105f92fe` FOREIGN KEY (`documentId`) REFERENCES `document_entity` (`id`);
 
 --
 -- Constraints for table `lecturer_entity`

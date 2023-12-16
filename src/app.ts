@@ -21,6 +21,7 @@ sourceMapSupport.install()
 app.use(cors());
 app.use(json())
 app.use(urlencoded({extended: false}))
+app.use('/files', express.static('uploads'))
 
 const router = express.Router()
 router.use('/', auth)

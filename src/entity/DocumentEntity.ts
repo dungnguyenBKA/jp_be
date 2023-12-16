@@ -6,6 +6,7 @@ import CategoryEntity from "./CategoryEntity";
 import UserViewDocumentEntity from "./UserViewDocumentEntity";
 import LecturerEntity from "./LecturerEntity";
 import SubjectEntity from "./SubjectEntity";
+import FileEntity from "./FileEntity";
 
 @Entity()
 export default class DocumentEntity extends BaseEntity {
@@ -14,9 +15,6 @@ export default class DocumentEntity extends BaseEntity {
 
   @Column({nullable: true})
   description: string
-
-  @Column()
-  download_url: string
 
   @Column({default: 0})
   download_count: number
@@ -50,4 +48,7 @@ export default class DocumentEntity extends BaseEntity {
 
   @ManyToOne(() => SubjectEntity, model => model.documents)
   subject: SubjectEntity
+
+  @OneToMany(() => FileEntity, model => model.document)
+  files: FileEntity[];
 }
