@@ -75,7 +75,9 @@ router.get("/detail/:id",
           subject: true,
           files: true,
           comments: true,
-          userReactDocuments: true
+          userReactDocuments: {
+            author: true
+          }
         }
       })
 
@@ -220,8 +222,6 @@ router.post("/create",
       if (!errors.isEmpty()) {
         return makeError(res, 404, AppUtils.getValidateError(errors))
       }
-
-      console.log(req)
 
       const files = (req.files || []) as Express.Multer.File[]
       if (files.length === 0) {
