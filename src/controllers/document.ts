@@ -4,7 +4,7 @@ import {AppDataSource} from "../services/dbService";
 import DocumentEntity from "../entity/DocumentEntity";
 import {UserModel} from "../entity/UserModel";
 import {body, validationResult} from "express-validator";
-import AppUtils, {tryParseInt} from "../utils/AppUtils";
+import AppUtils, {toLowerCaseNonAccentVietnamese, tryParseInt} from "../utils/AppUtils";
 import UserViewDocumentEntity from "../entity/UserViewDocumentEntity";
 import CategoryEntity from "../entity/CategoryEntity";
 import {DeepPartial, FindOptionsWhere, In, Like} from "typeorm";
@@ -141,41 +141,47 @@ router.get("/list/all", async (req, res) => {
     const perPage = tryParseInt(req.query["per_page"], 5) || 5
     const startIndex = page * perPage
 
-    console.log("hi", lecturer_id)
-
     const entityOption: FindOptionsWhere<DocumentEntity> = {
-      lecturer: {
-        ...(lecturer_id.length > 0 && {
-          id: In(lecturer_id)
-        }),
-        ...(school_id.length > 0 && {
-          school: {
-            id: In(school_id)
+      ...(
+        (lecturer_id.length > 0 || school_id.length > 0) && {
+          lecturer: {
+            ...(lecturer_id.length > 0 && {
+              id: In(lecturer_id)
+            }),
+            ...(school_id.length > 0 && {
+              school: {
+                id: In(school_id)
+              }
+            })
           }
-        })
-      },
-      subject: {
-        ...(subject_id.length > 0 && {
-          id: In(subject_id)
-        })
-      }
+        }
+      ),
+      ...(
+        subject_id.length > 0 && {
+          subject: {
+            id: In(subject_id)
+          }
+        }
+      )
     }
 
+    const query: FindOptionsWhere<DocumentEntity>[] = [
+      {
+        ...entityOption,
+        ...(keyword.length > 0 && {
+          title: Like(`%${keyword}%`)
+        })
+      },
+      {
+        ...entityOption,
+        ...(keyword.length > 0 && {
+          description: Like(`%${keyword}%`)
+        })
+      }
+    ]
+
     const result = await documentRepository.find({
-      where: [
-        {
-          ...entityOption,
-          ...(keyword.length > 0 && {
-            title: Like(`%${keyword}%`)
-          })
-        },
-        {
-          ...entityOption,
-          ...(keyword.length > 0 && {
-            description: Like(`%${keyword}%`)
-          })
-        }
-      ],
+      where: entityOption,
       relations: {
         categories: true,
         lecturer: {
@@ -186,7 +192,12 @@ router.get("/list/all", async (req, res) => {
       },
     })
 
-    const pagingData = result.slice(startIndex, startIndex + perPage)
+    console.log({result})
+    const filter
+      = result
+      .filter(item => toLowerCaseNonAccentVietnamese(item.title).includes(toLowerCaseNonAccentVietnamese(keyword)))
+
+    const pagingData = filter.slice(startIndex, startIndex + perPage)
     return makeSuccess(res, pagingData)
   } catch (e) {
     return makeError(res, 400, JSON.stringify(e))
