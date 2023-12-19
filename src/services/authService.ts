@@ -26,6 +26,9 @@ const authenticateJWT = async (request: Request, response: Response, next: NextF
     delete _userRes['password']
     // Attach request's identity to Request object
     request.body["performer"] = _userRes
+
+    // @ts-ignore
+    request.user = _userRes // for form-data only
   } catch (err) {
     return makeError(response, 401, "Invalid Token")
   }

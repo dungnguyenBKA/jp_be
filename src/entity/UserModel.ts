@@ -3,6 +3,7 @@ import BaseEntity from "./BaseEntity";
 import DocumentEntity from "./DocumentEntity";
 import CommentEntity from "./CommentEntity";
 import UserViewDocumentEntity from "./UserViewDocumentEntity";
+import UserReactDocumentEntity from "./UserReactDocumentEntity";
 
 @Entity()
 export class UserModel extends BaseEntity {
@@ -24,12 +25,12 @@ export class UserModel extends BaseEntity {
   @OneToMany(() => DocumentEntity, (model) => model.uploader)
   documents: DocumentEntity[]
 
-  @ManyToMany(() => DocumentEntity, (model) => model.likedUsers)
-  favouriteDocuments: DocumentEntity[]
-
   @OneToMany(() => CommentEntity, (model) => model.author)
   comments: CommentEntity[]
 
   @OneToMany(() => UserViewDocumentEntity, (model) => model.user)
   userViewDocuments: UserViewDocumentEntity[]
+
+  @OneToMany(() => UserReactDocumentEntity, (model) => model.author)
+  userReactDocuments: UserReactDocumentEntity[]
 }

@@ -9,6 +9,7 @@ import LecturerEntity from "../entity/LecturerEntity";
 import CommentEntity from "../entity/CommentEntity";
 import UserViewDocumentEntity from "../entity/UserViewDocumentEntity";
 import FileEntity from "../entity/FileEntity";
+import UserReactDocumentEntity from "../entity/UserReactDocumentEntity";
 
 export const AppDataSource = new DataSource({
   type: process.env.TYPEORM_TYPE as any,
@@ -29,6 +30,7 @@ export const AppDataSource = new DataSource({
     CommentEntity,
     UserViewDocumentEntity,
     FileEntity,
+    UserReactDocumentEntity,
   ],
   migrations: [],
   subscribers: []

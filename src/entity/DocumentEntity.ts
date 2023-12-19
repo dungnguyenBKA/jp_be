@@ -7,6 +7,7 @@ import UserViewDocumentEntity from "./UserViewDocumentEntity";
 import LecturerEntity from "./LecturerEntity";
 import SubjectEntity from "./SubjectEntity";
 import FileEntity from "./FileEntity";
+import UserReactDocumentEntity from "./UserReactDocumentEntity";
 
 @Entity()
 export default class DocumentEntity extends BaseEntity {
@@ -32,16 +33,15 @@ export default class DocumentEntity extends BaseEntity {
   @OneToMany(() => CommentEntity, model => model.document)
   comments: CommentEntity[]
 
-  @ManyToMany(() => UserModel, model => model.favouriteDocuments)
-  @JoinTable()
-  likedUsers: UserModel[]
-
   @ManyToMany(() => CategoryEntity, model => model.documents)
   @JoinTable()
   categories: CategoryEntity[]
 
   @OneToMany(() => UserViewDocumentEntity, model => model.document)
   userViewDocuments: UserViewDocumentEntity[];
+
+  @OneToMany(() => UserReactDocumentEntity, model => model.document)
+  userReactDocuments: UserReactDocumentEntity[];
 
   @ManyToOne(() => LecturerEntity, model => model.documents)
   lecturer: LecturerEntity

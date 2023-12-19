@@ -13,6 +13,8 @@ import SubjectEntity from "../entity/SubjectEntity";
 import multer from 'multer'
 import path from "path";
 import FileEntity from "../entity/FileEntity";
+import CommentEntity from "../entity/CommentEntity";
+import UserReactDocumentEntity from "../entity/UserReactDocumentEntity";
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -50,6 +52,8 @@ const subjectEntityRepository = AppDataSource.getRepository(SubjectEntity)
 const userRepository = AppDataSource.getRepository(UserModel)
 const userViewDocRepo = AppDataSource.getRepository(UserViewDocumentEntity)
 const fileEntityRepository = AppDataSource.getRepository(FileEntity)
+const commentEntityRepository = AppDataSource.getRepository(CommentEntity)
+const userReactDocumentEntityRepository = AppDataSource.getRepository(UserReactDocumentEntity)
 
 router.get("/detail/:id",
   async (req, res) => {
@@ -69,7 +73,9 @@ router.get("/detail/:id",
           },
           uploader: true,
           subject: true,
-          files: true
+          files: true,
+          comments: true,
+          userReactDocuments: true
         }
       })
 
@@ -204,7 +210,9 @@ router.post("/create",
   async (req, res,) => {
     try {
       const errors = validationResult(req);
-      const user: UserModel = req.body["performer"]
+
+      // @ts-ignore
+      const user: UserModel = req.user
       const categoryIds: string[] = (req.body["categories"] as string).split(",")
       const lecturer_id = tryParseInt(req.body["lecturer_id"], -1)
       const subject_id = tryParseInt(req.body["subject_id"], -1)
@@ -213,8 +221,7 @@ router.post("/create",
         return makeError(res, 404, AppUtils.getValidateError(errors))
       }
 
-      console.log(req.body)
-      console.log(req.files)
+      console.log(req)
 
       const files = (req.files || []) as Express.Multer.File[]
       if (files.length === 0) {
@@ -320,6 +327,135 @@ router.post("/verify-document",
       } else {
         return makeError(res, 404, "Only admin can verify documents!")
       }
+    } catch (e) {
+      return makeError(res, 400, JSON.stringify(e))
+    }
+  })
+
+
+router.post("/vote",
+  body("id").notEmpty(),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return makeError(res, 404, AppUtils.getValidateError(errors))
+      }
+
+      const docId = tryParseInt(req.body["id"], -1)
+      const currentUser: UserModel = req.body["performer"]
+
+      if (req.body["vote"] !== undefined && typeof req.body["vote"] !== "boolean") {
+        return makeError(res, 404, "Vote's value should be true | false | undefined")
+      }
+
+      const vote: boolean|undefined = req.body["vote"] // true | false | undefined <=> like | dislike | no vote
+
+      const document = await documentRepository.findOne({
+        where: {
+          id: docId
+        },
+      })
+
+      if (!document) {
+        return makeError(res, 404, "No document with this id")
+      }
+
+      const previousReact = await userReactDocumentEntityRepository.findOne({
+        where: {
+          author: {
+            id: currentUser.id
+          },
+          document: {
+            id: docId
+          }
+        }
+      })
+
+      console.log({vote})
+      if (previousReact) {
+        if (vote !== undefined) {
+          await userReactDocumentEntityRepository.save({
+            id: previousReact.id,
+            vote,
+            author: currentUser,
+            document: document
+          })
+        } else {
+          await userReactDocumentEntityRepository.delete({
+            id: previousReact.id
+          })
+        }
+      } else {
+        if (vote !== undefined) {
+          await userReactDocumentEntityRepository.save({
+            vote,
+            author: currentUser,
+            document: document
+          })
+        } else {
+          await userReactDocumentEntityRepository.delete({
+            author: {
+              id: currentUser.id
+            },
+            document: {
+              id: docId
+            }
+          })
+        }
+      }
+
+      const result = await documentRepository.findOne({
+        where: {
+          id: docId,
+        },
+        relations: {
+          userReactDocuments: {
+            author: true
+          }
+        }
+      })
+
+      return makeSuccess(res, result)
+
+    } catch (e) {
+      return makeError(res, 400, JSON.stringify(e))
+    }
+  })
+
+
+router.post("/comment",
+  body("id").notEmpty(),
+  body("content").isString().notEmpty(),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return makeError(res, 404, AppUtils.getValidateError(errors))
+      }
+
+      const docId = tryParseInt(req.body["id"], -1)
+      const content = req.body["content"]
+      const currentUser: UserModel = req.body["performer"]
+
+      const document = await documentRepository.findOne({
+        where: {
+          id: docId
+        },
+      })
+
+      if (!document) {
+        return makeError(res, 404, "No document with this id")
+      }
+
+      const result = await commentEntityRepository.save({
+        content,
+        author: currentUser,
+        document: document
+      })
+
+      return makeSuccess(res, result)
+
     } catch (e) {
       return makeError(res, 400, JSON.stringify(e))
     }
