@@ -7,7 +7,7 @@ import {body, validationResult} from "express-validator";
 import AppUtils, {tryParseInt} from "../utils/AppUtils";
 import UserViewDocumentEntity from "../entity/UserViewDocumentEntity";
 import CategoryEntity from "../entity/CategoryEntity";
-import {DeepPartial, In, Like} from "typeorm";
+import {DeepPartial, FindOptionsWhere, In, Like} from "typeorm";
 import LecturerEntity from "../entity/LecturerEntity";
 import SubjectEntity from "../entity/SubjectEntity";
 import multer from 'multer'
@@ -15,10 +15,11 @@ import path from "path";
 import FileEntity from "../entity/FileEntity";
 import CommentEntity from "../entity/CommentEntity";
 import UserReactDocumentEntity from "../entity/UserReactDocumentEntity";
+import {isNaN} from "lodash";
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null,'uploads');
+    cb(null, 'uploads');
   },
   filename: function (req, file, cb) {
     const extname = path.extname(file.originalname).toLowerCase()
@@ -37,7 +38,7 @@ const upload = multer({
     const mimetype = filetypes.test(file.mimetype);
 
     console.log({mimetype, extname})
-    if(mimetype && extname){
+    if (mimetype && extname) {
       return callback(null, true);
     }
     callback(null, false)
@@ -118,19 +119,63 @@ router.get("/detail/:id",
     }
   })
 
+
+function _getListId(input?: string): number[] {
+  if (!input) {
+    return []
+  }
+
+  return input.split(",")
+    .map(item => tryParseInt(item, -1))
+    .filter(item => !isNaN(item))
+}
+
 router.get("/list/all", async (req, res) => {
   try {
-    const query = req.query
-    const qName = req.query['name']?.toString() || ""
+    const keyword = req.query['keyword']?.toString() || ""
+    const lecturer_id = _getListId(req.query['lecturer_id']?.toString())
+    const school_id = _getListId(req.query['school_id']?.toString())
+    const subject_id = _getListId(req.query['subject_id']?.toString())
 
     const page = tryParseInt(req.query["page"], 0) || 0
     const perPage = tryParseInt(req.query["per_page"], 5) || 5
     const startIndex = page * perPage
 
-    const result = await documentRepository.find({
-      where: {
-        title: Like(`%${qName}%`)
+    console.log("hi", lecturer_id)
+
+    const entityOption: FindOptionsWhere<DocumentEntity> = {
+      lecturer: {
+        ...(lecturer_id.length > 0 && {
+          id: In(lecturer_id)
+        }),
+        ...(school_id.length > 0 && {
+          school: {
+            id: In(school_id)
+          }
+        })
       },
+      subject: {
+        ...(subject_id.length > 0 && {
+          id: In(subject_id)
+        })
+      }
+    }
+
+    const result = await documentRepository.find({
+      where: [
+        {
+          ...entityOption,
+          ...(keyword.length > 0 && {
+            title: Like(`%${keyword}%`)
+          })
+        },
+        {
+          ...entityOption,
+          ...(keyword.length > 0 && {
+            description: Like(`%${keyword}%`)
+          })
+        }
+      ],
       relations: {
         categories: true,
         lecturer: {
@@ -159,7 +204,9 @@ router.get("/list/recent-view", async (req, res) => {
         }
       },
       relations: {
-        document: true,
+        document: {
+          files: true
+        },
       },
       order: {
         view_at: "DESC"
@@ -349,7 +396,7 @@ router.post("/vote",
         return makeError(res, 404, "Vote's value should be true | false | undefined")
       }
 
-      const vote: boolean|undefined = req.body["vote"] // true | false | undefined <=> like | dislike | no vote
+      const vote: boolean | undefined = req.body["vote"] // true | false | undefined <=> like | dislike | no vote
 
       const document = await documentRepository.findOne({
         where: {
