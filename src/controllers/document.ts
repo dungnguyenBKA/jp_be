@@ -139,6 +139,7 @@ router.get("/list/all", async (req, res) => {
     const school_id = _getListId(req.query['school_id']?.toString())
     const subject_id = _getListId(req.query['subject_id']?.toString())
     const semester_id = _getListId(req.query['semester_id']?.toString())
+    const category_id = _getListId(req.query['category_id']?.toString())
 
     const page = tryParseInt(req.query["page"], 0) || 0
     const perPage = tryParseInt(req.query["per_page"], 5) || 5
@@ -172,7 +173,7 @@ router.get("/list/all", async (req, res) => {
             id: In(semester_id)
           }
         }
-      )
+      ),
     }
 
     const result = await documentRepository.find({
@@ -191,6 +192,7 @@ router.get("/list/all", async (req, res) => {
     const filter
       = result
       .filter(item => toLowerCaseNonAccentVietnamese(item.title).includes(toLowerCaseNonAccentVietnamese(keyword)))
+      .filter(item => item.categories.some(cate => category_id.length === 0 ? true : category_id.includes(cate.id)))
 
     const pagingData = filter.slice(startIndex, startIndex + perPage)
     return makeSuccess(res, pagingData)
