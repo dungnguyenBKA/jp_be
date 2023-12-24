@@ -8,6 +8,7 @@ import LecturerEntity from "./LecturerEntity";
 import SubjectEntity from "./SubjectEntity";
 import FileEntity from "./FileEntity";
 import UserReactDocumentEntity from "./UserReactDocumentEntity";
+import SemesterEntity from "./SemesterEntity";
 
 @Entity()
 export default class DocumentEntity extends BaseEntity {
@@ -19,9 +20,6 @@ export default class DocumentEntity extends BaseEntity {
 
   @Column({default: 0})
   download_count: number
-
-  @Column({default: ""})
-  semester: string
 
   @Column({default: false})
   is_verified: boolean
@@ -36,6 +34,10 @@ export default class DocumentEntity extends BaseEntity {
   @ManyToMany(() => CategoryEntity, model => model.documents)
   @JoinTable()
   categories: CategoryEntity[]
+
+  @ManyToOne(() => SemesterEntity, model => model.documents)
+  @JoinTable()
+  semester: SemesterEntity
 
   @OneToMany(() => UserViewDocumentEntity, model => model.document)
   userViewDocuments: UserViewDocumentEntity[];

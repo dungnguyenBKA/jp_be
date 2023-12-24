@@ -11,6 +11,7 @@ import category from "./controllers/category";
 import school from "./controllers/school";
 import lecturer from "./controllers/lecturer";
 import subject from "./controllers/subject";
+import semester from "./controllers/semester";
 
 const app = express()
 
@@ -31,6 +32,7 @@ router.use('/category', authenticateJWT, category)
 router.use('/school', authenticateJWT, school)
 router.use('/lecturer', authenticateJWT, lecturer)
 router.use('/subject', authenticateJWT, subject)
+router.use('/semester', authenticateJWT, semester)
 
 // Routes
 app.use("/api", router)

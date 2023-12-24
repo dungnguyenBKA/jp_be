@@ -7,7 +7,7 @@ import {body, validationResult} from "express-validator";
 import AppUtils, {toLowerCaseNonAccentVietnamese, tryParseInt} from "../utils/AppUtils";
 import UserViewDocumentEntity from "../entity/UserViewDocumentEntity";
 import CategoryEntity from "../entity/CategoryEntity";
-import {DeepPartial, FindOptionsWhere, In, Like} from "typeorm";
+import {DeepPartial, FindOptionsWhere, In} from "typeorm";
 import LecturerEntity from "../entity/LecturerEntity";
 import SubjectEntity from "../entity/SubjectEntity";
 import multer from 'multer'
@@ -16,6 +16,7 @@ import FileEntity from "../entity/FileEntity";
 import CommentEntity from "../entity/CommentEntity";
 import UserReactDocumentEntity from "../entity/UserReactDocumentEntity";
 import {isNaN} from "lodash";
+import SemesterEntity from "../entity/SemesterEntity";
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -55,6 +56,7 @@ const userViewDocRepo = AppDataSource.getRepository(UserViewDocumentEntity)
 const fileEntityRepository = AppDataSource.getRepository(FileEntity)
 const commentEntityRepository = AppDataSource.getRepository(CommentEntity)
 const userReactDocumentEntityRepository = AppDataSource.getRepository(UserReactDocumentEntity)
+const semesterEntityRepository = AppDataSource.getRepository(SemesterEntity)
 
 router.get("/detail/:id",
   async (req, res) => {
@@ -136,6 +138,7 @@ router.get("/list/all", async (req, res) => {
     const lecturer_id = _getListId(req.query['lecturer_id']?.toString())
     const school_id = _getListId(req.query['school_id']?.toString())
     const subject_id = _getListId(req.query['subject_id']?.toString())
+    const semester_id = _getListId(req.query['semester_id']?.toString())
 
     const page = tryParseInt(req.query["page"], 0) || 0
     const perPage = tryParseInt(req.query["per_page"], 5) || 5
@@ -162,23 +165,15 @@ router.get("/list/all", async (req, res) => {
             id: In(subject_id)
           }
         }
+      ),
+      ...(
+        semester_id.length > 0 && {
+          semester: {
+            id: In(semester_id)
+          }
+        }
       )
     }
-
-    const query: FindOptionsWhere<DocumentEntity>[] = [
-      {
-        ...entityOption,
-        ...(keyword.length > 0 && {
-          title: Like(`%${keyword}%`)
-        })
-      },
-      {
-        ...entityOption,
-        ...(keyword.length > 0 && {
-          description: Like(`%${keyword}%`)
-        })
-      }
-    ]
 
     const result = await documentRepository.find({
       where: entityOption,
@@ -188,11 +183,11 @@ router.get("/list/all", async (req, res) => {
           school: true
         },
         subject: true,
-        files: true
+        files: true,
+        semester: true,
       },
     })
 
-    console.log({result})
     const filter
       = result
       .filter(item => toLowerCaseNonAccentVietnamese(item.title).includes(toLowerCaseNonAccentVietnamese(keyword)))
@@ -247,6 +242,7 @@ router.get("/list/:id", async (req, res) => {
           },
           subject: true,
           files: true,
+          semester: true,
         },
       },
     })
@@ -267,6 +263,7 @@ router.post("/create",
   body("categories").notEmpty(),
   body("lecturer_id").isNumeric(),
   body("subject_id").isNumeric(),
+  body("semester_id").isNumeric(),
   async (req, res,) => {
     try {
       const errors = validationResult(req);
@@ -276,6 +273,7 @@ router.post("/create",
       const categoryIds: string[] = (req.body["categories"] as string).split(",")
       const lecturer_id = tryParseInt(req.body["lecturer_id"], -1)
       const subject_id = tryParseInt(req.body["subject_id"], -1)
+      const semester_id = tryParseInt(req.body["semester_id"], -1)
 
       if (!errors.isEmpty()) {
         return makeError(res, 404, AppUtils.getValidateError(errors))
@@ -294,6 +292,16 @@ router.post("/create",
 
       if (!lecturer) {
         return makeError(res, 400, `No lecturer with id ${lecturer_id}`)
+      }
+
+      const semester = await semesterEntityRepository.findOne({
+        where: {
+          id: semester_id
+        }
+      })
+
+      if (!semester) {
+        return makeError(res, 400, `No semester with id ${semester_id}`)
       }
 
       const subject = await subjectEntityRepository.findOne({
@@ -315,7 +323,7 @@ router.post("/create",
       const insertDoc = await documentRepository.save({
         title: req.body["title"],
         description: req.body["description"],
-        semester: req.body["semester"],
+        semester: semester,
         uploader: user,
         categories: categoryEntities,
         lecturer,
@@ -342,7 +350,8 @@ router.post("/create",
             school: true
           },
           subject: true,
-          files: true
+          files: true,
+          semester: true,
         }
       })
 
