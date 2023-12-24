@@ -195,7 +195,10 @@ router.get("/list/all", async (req, res) => {
       .filter(item => item.categories.some(cate => category_id.length === 0 ? true : category_id.includes(cate.id)))
 
     const pagingData = filter.slice(startIndex, startIndex + perPage)
-    return makeSuccess(res, pagingData)
+    return makeSuccess(res, {
+      total_count: filter.length,
+      data: pagingData
+    })
   } catch (e) {
     return makeError(res, 400, JSON.stringify(e))
   }
@@ -222,7 +225,15 @@ router.get("/list/recent-view", async (req, res) => {
       take: 5
     })
 
-    return makeSuccess(res, result)
+    const page = tryParseInt(req.query["page"], 0) || 0
+    const perPage = tryParseInt(req.query["per_page"], 5) || 5
+    const startIndex = page * perPage
+
+    const pagingData = result.slice(startIndex, startIndex + perPage)
+    return makeSuccess(res, {
+      total_count: result.length,
+      data: pagingData
+    })
   } catch (e) {
     return makeError(res, 400, JSON.stringify(e))
   }
