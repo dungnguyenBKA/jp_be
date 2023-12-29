@@ -216,7 +216,10 @@ router.get("/list/recent-view", async (req, res) => {
       },
       relations: {
         document: {
-          files: true
+          files: true,
+          userReactDocuments: {
+            author: true
+          }
         },
       },
       order: {

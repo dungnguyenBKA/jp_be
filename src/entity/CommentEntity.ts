@@ -5,7 +5,9 @@ import DocumentEntity from "./DocumentEntity";
 
 @Entity()
 export default class CommentEntity extends BaseEntity {
-  @Column()
+  @Column({
+    type: "text"
+  })
   content: string
 
   @ManyToOne(() => UserModel, model => model.comments)

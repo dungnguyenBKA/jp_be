@@ -24,6 +24,9 @@ export default class DocumentEntity extends BaseEntity {
   @Column({default: false})
   is_verified: boolean
 
+  @Column({default: false})
+  evidence_url: string
+
   @ManyToOne(() => UserModel, model => model.documents)
   @JoinColumn({name: "uploader_id"})
   uploader: UserModel
