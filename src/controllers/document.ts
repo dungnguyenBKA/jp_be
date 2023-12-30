@@ -29,20 +29,22 @@ const storage = multer.diskStorage({
   }
 })
 
+enum MIMETYPE {
+  JPG = "image/jpeg",
+  PNG = "image/png",
+  PDF = "application/pdf",
+  DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+}
+
 const upload = multer({
   storage,
   fileFilter(req, file, callback) {
-    const filetypes = /pdf|docx/;
-    // Check ext
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    // Check mime
-    const mimetype = filetypes.test(file.mimetype);
-
-    console.log({mimetype, extname})
-    if (mimetype && extname) {
-      return callback(null, true);
+    const allowedMimes = [MIMETYPE.JPG, MIMETYPE.PNG, MIMETYPE.PDF, MIMETYPE.DOCX];
+    if (allowedMimes.includes(file.mimetype as MIMETYPE)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Invalid file type. Only JPEG, PNG, PDF, and DOCX files are allowed.'));
     }
-    callback(null, false)
   },
 })
 
@@ -273,6 +275,10 @@ router.get("/list/:id", async (req, res) => {
   }
 })
 
+function getFirstItem<T>(arr: T[]): T | undefined {
+  return arr.length > 0 ? arr[0] : undefined;
+}
+
 router.post("/create",
   upload.array('files'),
   body("title").notEmpty(),
@@ -296,7 +302,16 @@ router.post("/create",
       }
 
       const files = (req.files || []) as Express.Multer.File[]
-      if (files.length === 0) {
+
+      const documents = files.filter(file => {
+        return file.mimetype === MIMETYPE.DOCX || file.mimetype === MIMETYPE.PDF
+      })
+
+      const evidences = files.filter(file => {
+        return file.mimetype === MIMETYPE.PNG || file.mimetype === MIMETYPE.JPG
+      })
+
+      if (documents.length === 0) {
         return makeError(res, 404, "Files pdf AND/OR docx is required")
       }
 
@@ -344,10 +359,11 @@ router.post("/create",
         categories: categoryEntities,
         lecturer,
         subject,
+        evidence_url: getFirstItem(evidences)?.filename
       })
 
       await fileEntityRepository.save(
-        files.map(item => {
+        documents.map(item => {
           return {
             url: item.filename,
             document: insertDoc
@@ -373,6 +389,7 @@ router.post("/create",
 
       return makeSuccess(res, result)
     } catch (e) {
+      console.log("Hello")
       return makeErrorInCatch(res, e)
     }
   },
