@@ -40,6 +40,8 @@ services:
       PMA_ARBITRARY: 1
     ports:
       - "4000:80"
+    depends_on:
+      - telebe_mysql
 
   portainer:
     image: portainer/portainer-ce:latest
