@@ -6,6 +6,8 @@ services:
       - db_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: always
+    networks:
+      - app_network
     command: --init-file /docker-entrypoint-initdb.d/init.sql
     environment:
       - MYSQL_ROOT_PASSWORD=root
@@ -15,6 +17,8 @@ services:
   telebe:
     image: node:16.3.0
     working_dir: /home/node/app
+    networks:
+      - app_network
     environment:
       - NODE_ENV=development
     volumes:
@@ -31,6 +35,8 @@ services:
   telebe_phpmyadmin:
     image: phpmyadmin
     restart: always
+    networks:
+      - app_network
     links:
       - telebe_mysql
     environment:
@@ -47,6 +53,8 @@ services:
     image: portainer/portainer-ce:latest
     container_name: portainer
     restart: unless-stopped
+    networks:
+      - app_network
     security_opt:
       - no-new-privileges:true
     volumes:
@@ -61,3 +69,8 @@ volumes:
   db_data:
   uploads:
   portainer-data:
+
+
+networks:
+  app_network:
+    driver: bridge
