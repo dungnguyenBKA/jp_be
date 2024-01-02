@@ -27,7 +27,7 @@ services:
       - uploads:/uploads
     expose:
       - "8081"
-    command: bash -c "npm install && npm start"
+    command: bash -c "npm install && npm prod"
     depends_on:
       - telebe_mysql
     ports:
