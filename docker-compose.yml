@@ -15,7 +15,7 @@ services:
     ports:
       - "3306:3306"
   telebe:
-    image: node:16.3.0
+    image: node:18.18.0
     working_dir: /home/node/app
     networks:
       - app_network
