@@ -1,5 +1,5 @@
 {
-  "name": "bugtracker-backend-js",
+  "name": "chavis_be",
   "version": "1.0.0",
   "description": "Backend written in JavaScript for a bug tracking system.",
   "type": "commonjs",

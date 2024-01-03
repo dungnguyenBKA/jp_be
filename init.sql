@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: host.docker.internal:3306
--- Generation Time: Dec 16, 2023 at 08:34 PM
+-- Host: telebe_mysql:3306
+-- Generation Time: Jan 02, 2024 at 03:59 AM
 -- Server version: 8.0.35
--- PHP Version: 8.2.13
+-- PHP Version: 8.2.14
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -41,7 +41,9 @@ CREATE TABLE `category_entity` (
 INSERT INTO `category_entity` (`id`, `createdAt`, `updatedAt`, `name`) VALUES
 (1, '2023-12-11 11:38:04.873504', '2023-12-11 11:38:04.873504', 'Chavis'),
 (4, '2023-12-11 11:39:15.534905', '2023-12-11 11:39:15.534905', 'CNTT'),
-(7, '2023-12-11 12:25:06.323574', '2023-12-11 12:25:06.323574', 'Game');
+(7, '2023-12-11 12:25:06.323574', '2023-12-11 12:25:06.323574', 'Game'),
+(8, '2024-01-02 03:58:25.804456', '2024-01-02 03:58:25.804456', 'Japanese'),
+(9, '2024-01-02 03:58:49.911422', '2024-01-02 03:58:49.911422', 'JP-ITSS');
 
 -- --------------------------------------------------------
 
@@ -53,9 +55,9 @@ CREATE TABLE `comment_entity` (
   `id` int NOT NULL,
   `createdAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-  `content` varchar(255) NOT NULL,
   `authorId` int DEFAULT NULL,
-  `documentId` int DEFAULT NULL
+  `documentId` int DEFAULT NULL,
+  `content` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -71,11 +73,12 @@ CREATE TABLE `document_entity` (
   `title` varchar(255) NOT NULL,
   `description` varchar(255) DEFAULT NULL,
   `download_count` int NOT NULL DEFAULT '0',
-  `semester` varchar(255) NOT NULL DEFAULT '',
   `is_verified` tinyint NOT NULL DEFAULT '0',
   `uploader_id` int DEFAULT NULL,
   `lecturerId` int DEFAULT NULL,
-  `subjectId` int DEFAULT NULL
+  `subjectId` int DEFAULT NULL,
+  `evidence_url` varchar(255) NOT NULL DEFAULT '0',
+  `semesterId` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -162,6 +165,28 @@ INSERT INTO `school_entity` (`id`, `createdAt`, `updatedAt`, `name`, `code`) VAL
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `semester_entity`
+--
+
+CREATE TABLE `semester_entity` (
+  `id` int NOT NULL,
+  `createdAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `name` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `semester_entity`
+--
+
+INSERT INTO `semester_entity` (`id`, `createdAt`, `updatedAt`, `name`) VALUES
+(1, '2024-01-02 03:57:53.039644', '2024-01-02 03:57:53.039644', '20223'),
+(2, '2024-01-02 03:57:56.889038', '2024-01-02 03:57:56.889038', '20222'),
+(3, '2024-01-02 03:58:00.118765', '2024-01-02 03:58:00.118765', '20221');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `subject_entity`
 --
 
@@ -179,7 +204,9 @@ CREATE TABLE `subject_entity` (
 --
 
 INSERT INTO `subject_entity` (`id`, `createdAt`, `updatedAt`, `name`, `code`, `schoolId`) VALUES
-(1, '2023-12-11 12:09:43.991871', '2023-12-11 12:09:43.991871', 'Lập trình hướng đối tượng', 'OOP', 1);
+(1, '2023-12-11 12:09:43.991871', '2023-12-11 12:09:43.991871', 'Lập trình hướng đối tượng', 'OOP', 1),
+(2, '2024-01-02 03:57:42.801008', '2024-01-02 03:57:42.801008', 'ITSS 2', 'ITSS2', 1),
+(3, '2024-01-02 03:57:48.531998', '2024-01-02 03:57:48.531998', 'ITSS 1', 'ITSS1', 1);
 
 -- --------------------------------------------------------
 
@@ -205,6 +232,21 @@ CREATE TABLE `user_model` (
 INSERT INTO `user_model` (`id`, `createdAt`, `updatedAt`, `email`, `full_name`, `password`, `avatar`, `role`) VALUES
 (1, '2023-12-10 11:08:58.930672', '2023-12-10 11:45:06.843171', 'admin@gmail.com', 'Admin Chavis', '$2a$10$vM1eUsvuusdnbmefD1e7wuy8MIcp/3RLReLSGPC0rGN/Tov4.QORy', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQO7jIuCSwjKtT8HcuxYlET-uBRpexLEJfqyCx8fnxtEw&s', 'admin'),
 (2, '2023-12-10 11:45:26.969016', '2023-12-10 11:45:26.969016', 'dungg.nm@gmail.com', 'Dung Nguyen Minh', '$2a$10$v.lit3gT/9Q0mIBVSMHR1ukUpCFNKE5FwWf16zIq.VccaOwLTCn3O', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQO7jIuCSwjKtT8HcuxYlET-uBRpexLEJfqyCx8fnxtEw&s', 'user');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_react_document_entity`
+--
+
+CREATE TABLE `user_react_document_entity` (
+  `id` int NOT NULL,
+  `createdAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `vote` tinyint NOT NULL,
+  `authorId` int DEFAULT NULL,
+  `documentId` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -247,7 +289,8 @@ ALTER TABLE `document_entity`
   ADD PRIMARY KEY (`id`),
   ADD KEY `FK_0c98e58dd42c6ff71afae6f0959` (`uploader_id`),
   ADD KEY `FK_8d0e93cc90d25a1c28671a88522` (`lecturerId`),
-  ADD KEY `FK_318121d98f78517a8c1ab575844` (`subjectId`);
+  ADD KEY `FK_318121d98f78517a8c1ab575844` (`subjectId`),
+  ADD KEY `FK_6bca3f21ac5e6dbddc905962f66` (`semesterId`);
 
 --
 -- Indexes for table `document_entity_categories_category_entity`
@@ -290,6 +333,13 @@ ALTER TABLE `school_entity`
   ADD UNIQUE KEY `IDX_79a86f6c71347c0aebf725dcbe` (`code`);
 
 --
+-- Indexes for table `semester_entity`
+--
+ALTER TABLE `semester_entity`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `IDX_0e6eacf120c6612663981fb430` (`name`);
+
+--
 -- Indexes for table `subject_entity`
 --
 ALTER TABLE `subject_entity`
@@ -304,6 +354,14 @@ ALTER TABLE `subject_entity`
 ALTER TABLE `user_model`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `IDX_864bd044bba869304084843358` (`email`);
+
+--
+-- Indexes for table `user_react_document_entity`
+--
+ALTER TABLE `user_react_document_entity`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `FK_2f32121caddeb4040dc81b5165c` (`authorId`),
+  ADD KEY `FK_2d821de0b4b6730b02142384c18` (`documentId`);
 
 --
 -- Indexes for table `user_view_document_entity`
@@ -321,7 +379,7 @@ ALTER TABLE `user_view_document_entity`
 -- AUTO_INCREMENT for table `category_entity`
 --
 ALTER TABLE `category_entity`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `comment_entity`
@@ -354,16 +412,28 @@ ALTER TABLE `school_entity`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
+-- AUTO_INCREMENT for table `semester_entity`
+--
+ALTER TABLE `semester_entity`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT for table `subject_entity`
 --
 ALTER TABLE `subject_entity`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `user_model`
 --
 ALTER TABLE `user_model`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `user_react_document_entity`
+--
+ALTER TABLE `user_react_document_entity`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `user_view_document_entity`
@@ -388,6 +458,7 @@ ALTER TABLE `comment_entity`
 ALTER TABLE `document_entity`
   ADD CONSTRAINT `FK_0c98e58dd42c6ff71afae6f0959` FOREIGN KEY (`uploader_id`) REFERENCES `user_model` (`id`),
   ADD CONSTRAINT `FK_318121d98f78517a8c1ab575844` FOREIGN KEY (`subjectId`) REFERENCES `subject_entity` (`id`),
+  ADD CONSTRAINT `FK_6bca3f21ac5e6dbddc905962f66` FOREIGN KEY (`semesterId`) REFERENCES `semester_entity` (`id`),
   ADD CONSTRAINT `FK_8d0e93cc90d25a1c28671a88522` FOREIGN KEY (`lecturerId`) REFERENCES `lecturer_entity` (`id`);
 
 --
@@ -421,6 +492,13 @@ ALTER TABLE `lecturer_entity`
 --
 ALTER TABLE `subject_entity`
   ADD CONSTRAINT `FK_aa984d6609a43704fbd590a4b91` FOREIGN KEY (`schoolId`) REFERENCES `school_entity` (`id`);
+
+--
+-- Constraints for table `user_react_document_entity`
+--
+ALTER TABLE `user_react_document_entity`
+  ADD CONSTRAINT `FK_2d821de0b4b6730b02142384c18` FOREIGN KEY (`documentId`) REFERENCES `document_entity` (`id`),
+  ADD CONSTRAINT `FK_2f32121caddeb4040dc81b5165c` FOREIGN KEY (`authorId`) REFERENCES `user_model` (`id`);
 
 --
 -- Constraints for table `user_view_document_entity`
