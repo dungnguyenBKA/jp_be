@@ -79,7 +79,9 @@ router.get("/detail/:id",
           uploader: true,
           subject: true,
           files: true,
-          comments: true,
+          comments: {
+            author: true
+          },
           userReactDocuments: {
             author: true
           }
